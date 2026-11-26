@@ -1,0 +1,7 @@
+#N canvas 100 100 600 260 12;
+#X text 20 20 META this is a prototype of a libdir meta file;
+#X text 20 50 NAME tessera;
+#X text 20 75 AUTHOR Sofia Vallejo Budziszewski;
+#X text 20 100 DESCRIPTION Classic synth architectures and creative effects for Pd vanilla: ten synths (DX7 TX81Z Minimoog SH-101 Prophet-5 Alpha Juno B-3 MS-20 CZ-101 Mellotron) and seven effects: spectral freeze smear gate cross and a pitch-aware granulator and a modal resonator bank and data modulators (CSV and Lorenz and Henon and cellular automata);
+#X text 20 160 LICENSE BSD-3-Clause;
+#X text 20 185 VERSION 0.3.0;

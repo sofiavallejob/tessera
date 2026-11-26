@@ -1,0 +1,10 @@
+.DS_Store
+build/
+dist/
+*.pd_darwin
+*.pd_linux
+*.dll
+*.o
+__pycache__/
+fx/test/test_core
+fx/test/test_fx
