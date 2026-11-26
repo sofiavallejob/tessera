@@ -72,7 +72,9 @@ foreach(syn ${ALL_SYNTHS})
 endforeach()
 
 # ---------------------------------------------------------------- library files
-install(FILES tessera-meta.pd README.md LICENSE DESTINATION ${DEST})
+install(FILES tessera-meta.pd README.md LICENSE CMakeLists.txt DESTINATION ${DEST})
+# sources travel with the package (puredata.info requires them for binary packages)
+install(DIRECTORY fx synths DESTINATION ${DEST}/source FILES_MATCHING PATTERN "*.c" PATTERN "*.h" PATTERN "*.py" PATTERN "Makefile")
 
 # ---------------------------------------------------------------- tests (offline, no Pd needed)
 option(BUILD_TESTS "Build the offline tests" OFF)
