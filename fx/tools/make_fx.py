@@ -62,11 +62,11 @@ def layout(params):
     n = len(params)
     ncols = 1 if n <= 8 else 2
     top = 218                                  # height of the preset block in the left column
-    if ncols == 1: return 1, [(0, top + i * PITCH) for i in range(n)], top + n * PITCH + 56
+    if ncols == 1: return 1, [(0, top + i * PITCH) for i in range(n)], top + n * PITCH + 24
     nr = (n + 4) // 2                          # right column takes more rows because it starts higher
     nl = n - nr
     pos = [(0, top + i * PITCH) for i in range(nl)] + [(1, 56 + i * PITCH) for i in range(nr)]
-    return 2, pos, max(top + nl * PITCH, 56 + nr * PITCH) + 56
+    return 2, pos, max(top + nl * PITCH, 56 + nr * PITCH) + 24
 
 def build_abstraction(name):
     params, presets = load(name)
@@ -78,14 +78,11 @@ def build_abstraction(name):
     p.add("#X obj 0 0 cnv 1 %d %d empty empty empty 20 12 0 14 %s %s 0;" % (W, H, PANEL, LB))
     p.add("#X obj 0 0 cnv 1 %d 44 empty empty %s 20 22 0 16 %s %s 0;" % (W, name, HEADER, INK))
     p.text(W - 130, 14, "=^..^=")
-    p.text(20, H - 44, "sofia vallejo budziszewski")
-    p.text(20, H - 26, "iem kug graz austria   version 1 (2026)")
     # preset block (left column)
-    p.add("#X symbolatom 20 56 22 0 0 0 - \\$1-name -;")
+    p.add("#X symbolatom 20 56 18 0 0 0 - \\$1-name -;")
     def bng(x, y, snd, label):
         p.add("#X obj %d %d bng 18 250 50 0 \\$1-%s empty %s 24 9 0 12 %s %s %s;" % (x, y, snd, label, BG, LB, LB))
-    bng(250, 56, "prev", "prev"); bng(310, 56, "next", "next") if ncols == 1 else None
-    if ncols == 2: bng(300, 56, "next", "next")
+    bng(180, 56, "prev", "prev"); bng(270, 56, "next", "next")
     bng(20, 100, "A", "a"); bng(90, 100, "B", "b"); bng(160, 100, "mutate", "mutate")
     p.add("#X obj 20 156 hsl 220 18 0 1 0 0 \\$1-morph empty morph 0 -9 0 12 %s %s %s 0 1;" % (BG, CTL, LB))
     p.add("#X obj 20 196 hsl 220 18 0 1 0 0 \\$1-data-in empty data 0 -9 0 12 %s %s %s 0 1;" % (BG, CTL, LB))
@@ -141,7 +138,7 @@ class Page:
         return y + lines * LH
     def para(self, x, y, s, wrap=100, gap=10): return self.text(x, y, s, wrap) + gap
     def msg(self, x, y, shown, raw=None):
-        return self._add("#X msg %d %d %s;" % (x, y, raw if raw else "\\; " + shown), "msg " + shown[:24], x, y, (len(shown) + 2) * CH + 12, 22)
+        return self._add("#X msg %d %d %s;" % (x, y, raw if raw else "\\; " + shown), "msg " + shown[:24], x, y, (max(len(q.strip()) for q in raw.split("\\;")) if raw else len(shown)) * CH + 22, 19 * ((raw.count("\\;") + 1) if raw else 2) + 6)
     def obj(self, x, y, s): return self._add("#X obj %d %d %s;" % (x, y, s), "obj " + s[:24], x, y, (len(s) + 1) * CH + 6, 22)
     def tgl(self, x, y): return self._add("#X obj %d %d tgl 18 0 empty empty empty 17 7 0 10 -262144 -1 -1 0 1;" % (x, y), "tgl", x, y, 20, 20)
     def sat(self, x, y, w, recv): return self._add("#X symbolatom %d %d %d 0 0 0 - %s -;" % (x, y, w, recv), "symbolatom", x, y, w * CH + 12, 22)
@@ -186,29 +183,29 @@ def page_presets(name, inst, presets):
     top = y
     half = -(-len(presets) // 2)
     for i, (n, _) in enumerate(presets):
-        cx = 30 + (i // half) * 430; cy = top + (i % half) * 34
+        cx = 30 + (i // half) * 430; cy = top + (i % half) * 54
         pg.msg(cx, cy, "%s preset %d" % (inst, i)); pg.text(cx + 210, cy + 2, "%d  %s" % (i, n.lower()))
-    y = top + half * 34 + 20
+    y = top + half * 54 + 20
     y = heading(pg, y, "now playing")
     pg.sat(30, y, 20, inst + "-name"); pg.fat(30 + 20 * CH + 40, y, 4, inst + "-index")
     pg.text(30 + 20 * CH + 150, y + 2, "name and number (minus one means edited)"); y += 44
     x = 30
     for shown in ["next", "prev", "mutate 0.3"]:
         s = "%s %s" % (inst, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    y += 40
+    y += 60
     y = pg.para(30, y, "next and prev step through the presets and wrap around. mutate varies the current sound by a random amount from 0 to 1. mutate leaves mix and level alone", 100)
     y = heading(pg, y, "morph between two sounds")
     x = 30
     for shown in ["A", "B"]:
         s = "%s %s" % (inst, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    pg.text(x, y + 2, "a and b remember the current sound"); y += 40
+    pg.text(x, y + 2, "a and b remember the current sound"); y += 60
     pg.text(30, y + 2, "morph"); pg.hsl(110, y, 300, inst + "-morph"); y += 44
     y = pg.para(30, y, "load one preset and press a then load another and press b then move the morph slider. Every continuous parameter blends smoothly. Switches change at the middle", 100)
     y = heading(pg, y, "your own user bank")
     x = 30
     for shown in ["store mysound", "save my.bank", "load my.bank"]:
         s = "%s %s" % (inst, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    y += 40
+    y += 60
     y = pg.para(30, y, "store keeps the current sound after the factory presets. save writes the user bank to a text file next to this patch and load reads such a file", 100)
     y = heading(pg, y, "presets with stash")
     y = pg.para(30, y, "every slider of the effect sends to %s-param and listens on %s-param-r. This is the naming scheme of the stash preset library: create [stash/bank %s] and send it a scan message with the name of the patch that holds the effect. It follows the stash rules but has not been tested together yet" % (inst, inst, inst), 100)
@@ -247,7 +244,7 @@ def page_messages(name, inst, presets):
     pg.text(30, y, "message"); pg.text(430, y, "what it does"); y += 34
     for shown, d in rows:
         pg.msg(30, y, "%s %s" % (inst, shown)); n = -(-len(d) // 70)
-        pg.text(430, y + 2, d, 76); y += max(34, n * LH + 14)
+        pg.text(430, y + 2, d, 76); y += max(54, n * LH + 14)
     if name == "grain~" or name == "modal~" or name == "datamod~":
         pass
     return pg
@@ -269,9 +266,9 @@ def page_examples(name, inst, presets):
     x1 = 330
     pg.text(x1, y0, "2  slow morph between preset 0 and 1")
     s1 = pg.msg(x1, y0 + 34, "%s preset 0 and a and preset 1 and b" % inst, "\\; %s preset 0 \\; %s A \\; %s preset 1 \\; %s B" % (inst, inst, inst, inst))
-    t2 = pg.tgl(x1, y0 + 94); m2 = pg.obj(x1, y0 + 134, "metro 6000")
-    g2 = pg.msg(x1, y0 + 174, "0 1 3000 0 3000 3000", "0 \\, 1 3000 \\, 0 3000 3000")
-    l2 = pg.obj(x1, y0 + 214, "line 0 30"); p2 = pg.obj(x1, y0 + 254, "list prepend morph"); u2 = pg.obj(x1, y0 + 294, "list trim"); n2 = pg.obj(x1, y0 + 334, "s " + inst)
+    t2 = pg.tgl(x1, y0 + 154); m2 = pg.obj(x1, y0 + 194, "metro 6000")
+    g2 = pg.msg(x1, y0 + 234, "0 1 3000 0 3000 3000", "0 \\, 1 3000 \\, 0 3000 3000")
+    l2 = pg.obj(x1, y0 + 274, "line 0 30"); p2 = pg.obj(x1, y0 + 314, "list prepend morph"); u2 = pg.obj(x1, y0 + 354, "list trim"); n2 = pg.obj(x1, y0 + 394, "s " + inst)
     for a, b in [(t2, m2), (m2, g2), (g2, l2), (l2, p2), (p2, u2), (u2, n2)]: pg.connect(a, 0, b, 0)
     x2 = 740
     pg.text(x2, y0, "3  sweep %s with a ramp" % sw)
@@ -279,15 +276,15 @@ def page_examples(name, inst, presets):
     g3 = pg.msg(x2, y0 + 114, "%s %s" % (fmt(lo), fmt(hi)), "%s \\, %s 2000 \\, %s 2000 2000" % (fmt(lo), fmt(hi), fmt(lo)))
     l3 = pg.obj(x2, y0 + 154, "line %s 30" % fmt(lo)); p3 = pg.obj(x2, y0 + 194, "list prepend %s" % sw); u3 = pg.obj(x2, y0 + 234, "list trim"); n3 = pg.obj(x2, y0 + 274, "s " + inst)
     for a, b in [(t3, m3), (m3, g3), (g3, l3), (l3, p3), (p3, u3), (u3, n3)]: pg.connect(a, 0, b, 0)
-    yy = y0 + 440
+    yy = y0 + 500
     pg.text(30, yy, "4  data in: a ramp stands in for a sensor or a csv column. Click the map box once first")
     mm = pg.msg(30, yy + 34, "%s datamap %s 0.4" % (inst, D.SWEEP.get(name, "mix")))
-    t5 = pg.tgl(30, yy + 74); m5 = pg.obj(30, yy + 114, "metro 4000")
-    g5 = pg.msg(30, yy + 154, "0 1 2000 0 2000 2000", "0 \\, 1 2000 \\, 0 2000 2000")
-    l5 = pg.obj(30, yy + 194, "line 0 30"); p5 = pg.obj(30, yy + 234, "list prepend data"); u5 = pg.obj(30, yy + 274, "list trim"); s5 = pg.obj(30, yy + 314, "s " + inst)
+    t5 = pg.tgl(30, yy + 94); m5 = pg.obj(30, yy + 134, "metro 4000")
+    g5 = pg.msg(30, yy + 174, "0 1 2000 0 2000 2000", "0 \\, 1 2000 \\, 0 2000 2000")
+    l5 = pg.obj(30, yy + 214, "line 0 30"); p5 = pg.obj(30, yy + 254, "list prepend data"); u5 = pg.obj(30, yy + 294, "list trim"); s5 = pg.obj(30, yy + 334, "s " + inst)
     for a, b in [(t5, m5), (m5, g5), (g5, l5), (l5, p5), (p5, u5), (u5, s5)]: pg.connect(a, 0, b, 0)
-    pg.text(330, yy + 74, "in your own patch send any value from 0 to 1 to [s %s] as: data 0.7. For a csv series scale it to the range 0 to 1 first. [tessera/datamod~] does that for you and its data outlet can be connected straight to the inlet of any tessera effect" % inst, 70)
-    pg.ymax = max(pg.ymax, yy + 340)
+    pg.text(330, yy + 94, "in your own patch send any value from 0 to 1 to [s %s] as: data 0.7. For a csv series scale it to the range 0 to 1 first. [tessera/datamod~] does that for you and its data outlet can be connected straight to the inlet of any tessera effect" % inst, 70)
+    pg.ymax = max(pg.ymax, yy + 380)
     return pg
 
 def chain(pg, x, y, kind):
@@ -314,11 +311,11 @@ def page_engine(name, inst, W, H):
     pg = Page("engine", 430 + W + 400, 900)
     nin, nout, nctl = D.NIN[name], D.NOUT[name], D.NCTL[name]
     pg.text(30, 16, "the effect below is the abstraction itself with its panel. Its name is %s" % inst)
-    pg.msg(30, 50, "pd dsp 1", "\\; pd dsp 1"); pg.msg(160, 50, "pd dsp 0", "\\; pd dsp 0"); pg.text(300, 54, "dsp on and off")
+    pg.msg(30, 52, "pd dsp 1", "\\; pd dsp 1"); pg.msg(170, 52, "pd dsp 0", "\\; pd dsp 0"); pg.text(310, 56, "dsp on and off")
     ex = 430
     box = pg.absbox(ex, 100, W + 14, H + 8, "tessera/%s %s" % (name, inst))
     if name == "datamod~":
-        pg.text(30, 100, "the four lanes make an oscillator sing: lane 1 is the pitch and lane 2 is the level", 40)
+        pg.text(30, 110, "the four lanes make an oscillator sing: lane 1 is the pitch and lane 2 is the level", 40)
         mul = pg.obj(30, 190, "*~ 600"); add = pg.obj(30, 230, "+~ 200"); osc = pg.obj(30, 270, "osc~")
         gm = pg.obj(30, 310, "*~"); gv = pg.obj(30, 350, "*~ 0.1"); dac = pg.obj(30, 440, "dac~")
         lv = pg.obj(130, 270, "*~ 0.8")
@@ -334,7 +331,7 @@ def page_engine(name, inst, W, H):
         pr2 = pg.obj(ex + W + 200, 150, "print cells"); pg.connect(rt, 1, pr2, 0)
         return pg
     if name == "cross~":
-        a = chain(pg, 30, 130, "noise"); pg.text(30, 100, "sound a: noise")
+        a = chain(pg, 30, 150, "noise"); pg.text(30, 110, "sound a: noise")
         b = chain(pg, 30, 420, "tones"); pg.text(30, 390, "sound b: three tones")
         pg.connect(a, 0, box, 0); pg.connect(b, 0, box, 1)
     else:
@@ -348,8 +345,8 @@ def page_engine(name, inst, W, H):
     else:
         pg.connect(vol, 0, dac, 1)
     if name == "modal~":
-        pg.msg(30, 600, "m1 strike 1", "\\; %s strike 1" % inst); pg.text(30, 640, "strike rings the modes without an input", 36)
-        pg.msg(30, 700, "m1 learn", "\\; %s learn" % inst); pg.text(30, 740, "switch the sound on and press learn. then choose material learned in the panel", 36)
+        pg.msg(30, 600, "m1 strike 1", "\\; %s strike 1" % inst); pg.text(30, 656, "strike rings the modes without an input", 36)
+        pg.msg(30, 716, "m1 learn", "\\; %s learn" % inst); pg.text(30, 772, "switch the sound on and press learn. then choose material learned in the panel", 36)
         fa = pg.fat(ex + W + 60, 100, 6); pg.text(ex + W + 60, 64, "modes found by learn")
         sel = pg.obj(ex + W + 60, 150, "route learned"); pg.connect(box, 2, sel, 0); pg.connect(sel, 0, fa, 0)
     if name == "grain~":

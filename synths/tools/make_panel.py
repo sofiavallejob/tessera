@@ -236,7 +236,7 @@ class Page:
     def para(self, x, y, s, wrap=100, gap=10):
         return self.text(x, y, s, wrap) + gap
     def msg(self, x, y, shown, raw=None):
-        return self._add("#X msg %d %d %s;" % (x, y, raw if raw else "\\; " + shown), "msg " + shown[:24], x, y, (len(shown) + 2) * CH + 12, 22)
+        return self._add("#X msg %d %d %s;" % (x, y, raw if raw else "\\; " + shown), "msg " + shown[:24], x, y, (max(len(q.strip()) for q in raw.split("\\;")) if raw else len(shown)) * CH + 22, 19 * ((raw.count("\\;") + 1) if raw else 2) + 6)
     def obj(self, x, y, s):
         return self._add("#X obj %d %d %s;" % (x, y, s), "obj " + s[:24], x, y, (len(s) + 1) * CH + 6, 22)
     def sat(self, x, y, w, recv): return self._add("#X symbolatom %d %d %d 0 0 0 - %s - 0;" % (x, y, w, recv), "symbolatom", x, y, w * CH + 12, 22)
@@ -283,29 +283,29 @@ def page_presets(syn):
     y = heading(pg, y, "factory presets")
     half = -(-len(names) // 2); top = y
     for i, n in enumerate(names):
-        cx = 30 + (i // half) * 430; cy = top + (i % half) * 34
+        cx = 30 + (i // half) * 430; cy = top + (i % half) * 54
         pg.msg(cx, cy, "%s preset %d" % (syn, i)); pg.text(cx + 220, cy + 2, "%d  %s" % (i, n))
-    y = top + half * 34 + 20
+    y = top + half * 54 + 20
     y = heading(pg, y, "now playing")
     pg.sat(30, y, 20, syn + "-name"); pg.fat(30 + 20 * CH + 40, y, 4, syn + "-index")
     pg.text(30 + 20 * CH + 150, y + 2, "name and number (minus one means edited)"); y += 44
     x = 30
     for shown in ["next", "prev", "mutate 0.3"]:
         s = "%s %s" % (syn, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    y += 40
+    y += 60
     y = pg.para(30, y, "next and prev step through the presets and wrap around. mutate varies the current sound by a random amount from 0 to 1", 100)
     y = heading(pg, y, "morph between two sounds")
     x = 30
     for shown in ["A", "B"]:
         s = "%s %s" % (syn, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    pg.text(x, y + 2, "A and B remember the current sound"); y += 40
+    pg.text(x, y + 2, "A and B remember the current sound"); y += 60
     pg.text(30, y + 2, "morph"); pg.hsl(110, y, 300, "morph"); y += 44
     y = pg.para(30, y, "load one preset and press A then load another and press B then move the morph slider. Every parameter blends smoothly between the two", 100)
     y = heading(pg, y, "your own user bank")
     x = 30
     for shown in ["store mysound", "save my.bank", "load my.bank"]:
         s = "%s %s" % (syn, shown); pg.msg(x, y, s); x += (len(s) + 2) * CH + 40
-    y += 40
+    y += 60
     y = pg.para(30, y, "store keeps the current sound after the factory presets. save writes the user bank to a text file next to this patch and load adds the sounds from a text file", 100)
     y = heading(pg, y, "presets with stash")
     y = pg.para(30, y, "every slider in the parameters page sends to %s-name and listens on %s-name-r so the stash library can store and morph whole scenes: create [stash/bank %s] and send it a scan message for a saved copy of the parameters page. This follows the stash naming rules but has not been tested together yet" % (syn, syn, syn), 100)
@@ -385,7 +385,7 @@ def page_messages(syn):
                  ("sample 60 c4.wav", "put one wav on the key for midi note 60"),
                  ("samples clear", "unload all tapes and go back to the synthetic stand-in")]
     for shown, desc in rows:
-        pg.msg(30, y, "%s %s" % (P, shown)); pg.text(30 + 38 * CH, y + 2, desc); y += 34
+        pg.msg(30, y, "%s %s" % (P, shown)); pg.text(30 + 38 * CH, y + 2, desc); y += 54
     y += 14
     y = heading(pg, y, "outlets of the object")
     y = pg.para(30, y, "outlet 1 audio left   outlet 2 audio right   outlet 3 preset name as a symbol   outlet 4 list with preset index and preset count", 110)
@@ -430,12 +430,12 @@ def page_examples(syn):
     yy = y0 + 430
     pg.text(30, yy, "5  data in: a ramp stands in for a sensor or csv column. Click the map box once first")
     mm = pg.msg(30, yy + 34, "%s datamap %s 0.4" % (P, SWEEP[syn]))
-    t5 = pg.tgl(30, yy + 74); m5 = pg.obj(30, yy + 114, "metro 4000")
-    g5 = pg.msg(30, yy + 154, "0 1 2000 0 2000 2000", "0 \\, 1 2000 \\, 0 2000 2000")
-    l5 = pg.obj(30, yy + 194, "line 0 30"); p5 = pg.obj(30, yy + 234, "list prepend data"); u5 = pg.obj(30, yy + 274, "list trim"); s5 = pg.obj(30, yy + 314, "s " + P)
+    t5 = pg.tgl(30, yy + 94); m5 = pg.obj(30, yy + 134, "metro 4000")
+    g5 = pg.msg(30, yy + 174, "0 1 2000 0 2000 2000", "0 \\, 1 2000 \\, 0 2000 2000")
+    l5 = pg.obj(30, yy + 214, "line 0 30"); p5 = pg.obj(30, yy + 254, "list prepend data"); u5 = pg.obj(30, yy + 294, "list trim"); s5 = pg.obj(30, yy + 334, "s " + P)
     for a_, b_ in [(t5, m5), (m5, g5), (g5, l5), (l5, p5), (p5, u5), (u5, s5)]: pg.connect(a_, 0, b_, 0)
-    pg.text(330, yy + 74, "in your own patch send any value from 0 to 1 to [s %s] as: data 0.7. For a csv series scale it to 0..1 first" % P, 60)
-    pg.ymax = max(pg.ymax, yy + 340)
+    pg.text(330, yy + 94, "in your own patch send any value from 0 to 1 to [s %s] as: data 0.7. For a csv series scale it to 0..1 first" % P, 60)
+    pg.ymax = max(pg.ymax, yy + 380)
     return pg
 
 def page_midi(syn):
@@ -459,7 +459,7 @@ def page_midi(syn):
 
 def page_engine(syn):
     P = syn
-    pg = Page(syn, "engine", 1000, 420)
+    pg = Page(syn, "engine", 1000, 520)
     y = 16
     y = pg.para(30, y, "this page holds the synth itself. Turn dsp on then play your midi keyboard or click chord on", 110)
     sy = pg.obj(30, y + 20, "%s~ %s" % (P, P)); dc = pg.obj(30, y + 100, "dac~")
@@ -467,11 +467,11 @@ def page_engine(syn):
     pg.msg(300, y + 20, "pd dsp 1"); pg.msg(440, y + 20, "pd dsp 0")
     notes = (48, 55, 64, 72)
     on = " ".join("\\; %s note %d 100" % (P, n) for n in notes); off = " ".join("\\; %s note %d 0" % (P, n) for n in notes)
-    pg.msg(300, y + 100, "chord on", on); pg.msg(440, y + 100, "chord off", off); pg.msg(580, y + 100, "%s panic" % P)
+    pg.msg(300, y + 100, "chord on", on); pg.msg(520, y + 100, "chord off", off); pg.msg(740, y + 100, "%s panic" % P)
     mp = page_midi(syn)
-    pg.sub(300, y + 180, mp)
-    pg.text(430, y + 182, "midi in: notes bend mod wheel sustain and aftertouch (open to see how it is built)", 52)
-    y += 260
+    pg.sub(300, y + 230, mp)
+    pg.text(430, y + 232, "midi in: notes bend mod wheel sustain and aftertouch (open to see how it is built)", 52)
+    y += 300
     note = "mono: a chord plays only the last note" if P in MONO else "polyphonic: a chord plays all four notes"
     pg.text(30, y, "chord on plays c2 g2 e3 c4. " + note, 100)
     pg.text(30, y + 40, "the console prints the version line when the object is created. If the object box shows a dashed border the external was not found: check the externals folder and restart pd", 100)
